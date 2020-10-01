@@ -19,10 +19,6 @@ data "aws_ami" "latest-ubuntu" {
         values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
     }
 
-    filter {
-        name   = "virtualization-type"
-        values = ["hvm"]
-    }
 }
 
 provider "aws" {
@@ -31,8 +27,10 @@ provider "aws" {
 }
 
 resource "aws_instance" "ec2_instance" {
-    ami           = "${data.aws_ami.latest-ubuntu.id}"
+    # ami           = "${data.aws_ami.latest-ubuntu.id}"
+    ami           = "ami-0c1ab2d66f996cd4b"
     instance_type = "t2.micro"
+    associate_public_ip_address = true
 }
 
 resource "aws_ecs_cluster" "app" {
@@ -53,7 +51,7 @@ resource "aws_ecs_task_definition" "app" {
     "portMappings": [
       {
         "containerPort": 8050,
-        "hostPort": 8051
+        "hostPort": 8081
       }
     ]
   }
