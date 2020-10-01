@@ -20,6 +20,34 @@ resource "aws_instance" "ec2_example" {
   instance_type = "t2.micro"
 }
 
+resource "aws_ecs_cluster" "app" {
+  name = "ecs_cluster"
+}
+
+resource "aws_ecs_task_definition" "app" {
+  family                   = "ecs_cluster"
+  requires_compatibilities = ["EC2"]
+  memory                   = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "name": "dash_app",
+    "image": "372063237374.dkr.ecr.us-west-2.amazonaws.com/pushpak:latest",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 8080,
+        "hostPort": 8050
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
+# Add database stuff later
+/*
 resource "aws_db_instance" "mysql_example" {
   allocated_storage    = 20
   storage_type         = "gp2"
@@ -40,3 +68,4 @@ provider "mysql" {
   username = "${aws_db_instance.default.username}"
   password = "${aws_db_instance.default.password}"
 }
+*/
