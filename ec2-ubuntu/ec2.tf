@@ -10,14 +10,29 @@ terraform {
   }
 }
 
+data "aws_ami" "latest-ubuntu" {
+  most_recent = true
+  owners = ["099720109477"] # Canonical
+
+    filter {
+        name   = "name"
+        values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+    }
+
+    filter {
+        name   = "virtualization-type"
+        values = ["hvm"]
+    }
+}
+
 provider "aws" {
   profile = "default"
   region  = "us-west-2"
 }
 
-resource "aws_instance" "ec2_example" {
-  ami           = "ami-830c94e3"
-  instance_type = "t2.micro"
+resource "aws_instance" "ec2_instance" {
+    ami           = "${data.aws_ami.latest-ubuntu.id}"
+    instance_type = "t2.micro"
 }
 
 resource "aws_ecs_cluster" "app" {
@@ -37,8 +52,8 @@ resource "aws_ecs_task_definition" "app" {
     "essential": true,
     "portMappings": [
       {
-        "containerPort": 8080,
-        "hostPort": 8050
+        "containerPort": 8050,
+        "hostPort": 8051
       }
     ]
   }
