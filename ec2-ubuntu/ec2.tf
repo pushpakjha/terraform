@@ -10,37 +10,38 @@ terraform {
   }
 }
 
-data "aws_ami" "latest-ubuntu" {
-  most_recent = true
-  owners = ["099720109477"] # Canonical
+# data "aws_ami" "latest-ubuntu" {
+#   most_recent = true
+#   owners = ["099720109477"] # Canonical
 
-    filter {
-        name   = "name"
-        values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
-    }
+#     filter {
+#         name   = "name"
+#         values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+#     }
 
-}
+# }
+# resource "aws_instance" "ec2_instance" {
+#     # ami           = "${data.aws_ami.latest-ubuntu.id}"
+#     ami           = "ami-0c1ab2d66f996cd4b"
+#     instance_type = "t2.micro"
+#     associate_public_ip_address = true
+# }
+
 
 provider "aws" {
   profile = "default"
   region  = "us-west-2"
 }
 
-resource "aws_instance" "ec2_instance" {
-    # ami           = "${data.aws_ami.latest-ubuntu.id}"
-    ami           = "ami-0c1ab2d66f996cd4b"
-    instance_type = "t2.micro"
-    associate_public_ip_address = true
-}
 
 resource "aws_ecs_cluster" "app" {
-  name = "ecs_cluster"
+  name = "ecs_cluster_app"
 }
+
 
 resource "aws_ecs_task_definition" "app" {
   family                   = "ecs_cluster"
-  requires_compatibilities = ["EC2"]
-  memory                   = "512"
+  # memory                   = "512"
 
   container_definitions = <<DEFINITION
 [
@@ -57,6 +58,19 @@ resource "aws_ecs_task_definition" "app" {
   }
 ]
 DEFINITION
+}
+
+
+data "aws_ecs_task_definition" "app" {
+  task_definition = "${aws_ecs_task_definition.app.family}"
+}
+
+
+resource "aws_ecs_service" "test-ecs-service" {
+  	name            = "test-ecs-service"
+  	cluster         = "${aws_ecs_cluster.app.id}"
+  	task_definition = "${aws_ecs_task_definition.app.family}:${max("${aws_ecs_task_definition.app.revision}", "${data.aws_ecs_task_definition.app.revision}")}"
+  	desired_count   = 2
 }
 
 # Add database stuff later
