@@ -12,8 +12,21 @@ provider "aws" {
   region  = "us-west-2"
 }
 
+data "aws_ami" "dash_app_example" {
+  executable_users = ["self"]
+  most_recent      = true
+  name_regex       = "^pushpak"
+  owners           = ["self"]
+
+  filter {
+    name   = "name"
+    values = ["pushpak"]
+  }
+}
+
 resource "aws_instance" "pushpakjha-ec2" {
-  ami           = "ami-0c1ab2d66f996cd4b"
+  # ami           = data.aws_ami.dash_app_example.id
+  ami             = "ami-0c1ab2d66f996cd4b"
   instance_type = "t2.medium"
   key_name = "pushpakjha_ssh_key"
   subnet_id = aws_subnet.subnet-uno.id
